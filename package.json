@@ -1,0 +1,14 @@
+{
+  "name": "node-gdal-docker",
+  "version": "0.0.1",
+  "author": "Jacky Tang",
+  "license": "MIT",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "express": "^4.16.2",
+    "gdal": "^0.9.6"
+  }
+}
