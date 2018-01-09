@@ -12,33 +12,38 @@ const app = express()
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
-app.get('/', (req, res) => {
+app.get('/version', (req, res) => {
   res.send(`node-gdal-docker v${pjson.version}`)
 })
 
-// curl -H "Content-Type: application/json" -d '{"query":[1,2,3,4,5]}' 127.0.0.1:8080
-app.post('/', (req, res) => {
-
-  // Convert EPSG to SRS
-  const ret = req.body.query.map(q => {
-    try {
-      const SRS = gdal.SpatialReference.fromEPSG(Number(q))
-      const error = SRS.validate()
-      if (error) {
-        return ({ error })
-      } else {
-        return ({
-          code: q,
-          name: `${SRS.getAttrValue('PROJCS') || SRS.getAttrValue('GEOGCS')}`,
-          proj4: SRS.toWKT()
-        })
-      }
-    } catch (e) {
-      return ({ error: e.message })
+// Convert EPSG GCS or PCS code to name and WKT format.
+const convert = input => {
+  const code = Number(input)
+  try {
+    const ref = gdal.SpatialReference.fromEPSG(code)
+    const name = ref.getAttrValue('PROJCS') || ref.getAttrValue('GEOCCS') || ref.getAttrValue('GEOGCS')
+    const proj4 = ref.toWKT()
+    return {
+      code,
+      name,
+      proj4
     }
-  })
+  } catch (error) {
+    return {
+      code,
+      error: error.message
+    }
+  }
+}
 
-  res.json(ret)
+// curl 127.0.0.1:8080/4479 | jq
+app.get('/:code', (req, res) => {
+  return res.json(convert(req.params.code))
+})
+
+// curl -H "Content-Type: application/json" -d '{"query":4479}' 127.0.0.1:8080 | jq
+app.post('/', (req, res) => {
+  return res.json(convert(req.body.data))
 })
 
 app.listen(PORT, HOST)
