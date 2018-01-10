@@ -1,0 +1,18 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: gdal-deployment
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: gdal
+    spec:
+      containers:
+      - name: gdal
+        image: jackytck/node-gdal-docker:v0.0.1
+        imagePullPolicy: Always
+        ports:
+        - name: gdal-port
+          containerPort: 8080
